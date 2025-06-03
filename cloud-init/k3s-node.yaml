@@ -1,4 +1,23 @@
 #cloud-config
+write_files:
+  - path: /etc/systemd/system/k3s-check.service
+    content: |
+      [Unit]
+      Description=K3s Service Check
+      After=k3s.service
+      
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c 'systemctl is-active --quiet k3s.service || (echo "k3s service failed to start" && exit 1)'
+      
+      [Install]
+      WantedBy=multi-user.target
+
 runcmd:
   - curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--flannel-iface eth0" sh -
-  - echo "K3s installed on $(hostname)" >> /var/log/k3s-install.log
+  - systemctl daemon-reload
+  - systemctl enable k3s
+  - systemctl start k3s
+  - systemctl enable k3s-check
+  - systemctl start k3s-check
+  - echo "K3s installed and service verified on $(hostname)" >> /var/log/k3s-install.log

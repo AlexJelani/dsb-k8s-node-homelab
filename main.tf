@@ -10,6 +10,7 @@ resource "oci_core_vcn" "dsb_vcn" {
   compartment_id = var.compartment_ocid
   display_name   = "dsb-vcn"
   cidr_block     = var.vcn_cidr_block
+  dns_label      = "dsbvcn" # Add this line (must be unique in the region)
 }
 
 resource "oci_core_internet_gateway" "dsb_igw" {
@@ -63,7 +64,7 @@ resource "oci_core_subnet" "dsb_node_subnet" {
   vcn_id              = oci_core_vcn.dsb_vcn.id
   cidr_block          = var.subnet_cidr_block
   display_name        = "dsb-node-subnet"
-  dns_label           = "dsbnodesub" # Must be 15 chars or less, starting with a letter
+  dns_label           = "dsbnodesub" # This is fine
   security_list_ids   = [oci_core_security_list.dsb_node_sl.id]
   route_table_id      = oci_core_vcn.dsb_vcn.default_route_table_id
   dhcp_options_id     = oci_core_vcn.dsb_vcn.default_dhcp_options_id
@@ -91,7 +92,7 @@ resource "oci_core_instance" "dsb_k8s_node" {
   }
 
   metadata = {
-    ssh_authorized_keys = var.ssh_public_key
+    ssh_authorized_keys = file("~/.ssh/id_rsa.pub") # Path to your SSH public key
     user_data           = base64encode(file("${path.module}/cloud-init/k3s-node.yaml"))
   }
 }
