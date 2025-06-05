@@ -22,3 +22,6 @@ override.tf.json
 .vscode/
 .idea/
 *.swp
+.env
+k3s-config.yaml
+*.kubeconfig # A more general rule for any kubeconfig files

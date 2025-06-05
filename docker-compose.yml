@@ -1,0 +1,35 @@
+services:
+  k3s-server:
+    image: rancher/k3s:v1.28.7-k3s1 # Corrected image tag
+    container_name: k3s-server
+    command: >
+      server
+      --flannel-iface eth0
+      --disable traefik
+      --disable metrics-server
+      --disable servicelb
+      --tls-san ${HOST_IP}
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - K3S_KUBECONFIG_MODE=644
+    ports:
+      - "6443:6443"
+      - "80:80"          # Only needed if using Ingress later
+      - "443:443"        # Only needed if using Ingress later
+    volumes:
+      - k3s-data:/var/lib/rancher/k3s
+      - /etc/machine-id:/etc/machine-id:ro  # For node stability
+    deploy:
+      resources:
+        limits:
+          cpus: '1' # You might consider increasing this later if needed
+          memory: 1G # Increased memory allocation
+    healthcheck:
+      test: ["CMD", "kubectl", "get", "nodes"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  k3s-data:
